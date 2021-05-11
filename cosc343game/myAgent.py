@@ -163,25 +163,22 @@ def newGeneration(old_population):
         #print(creature.strawb_eats)
         strawb_fitness[n]['value'] = 0.0
 
-        strawb_fitness[n]['value'] += creature.strawb_eats*20 + creature.enemy_eats*5
+        strawb_fitness[n]['value'] += creature.strawb_eats*20 + creature.enemy_eats*5 +creature.size
 
 
     # At this point you should sort the agent according to fitness and create new population
     strawb_sorterd_fitness = np.sort(strawb_fitness, order='value')
 
 
-    strawb_top_10 = strawb_sorterd_fitness
-
     new_population = list()
 
-    strawb_normalised = selection(strawb_top_10)
+    strawb_normalised = selection(strawb_sorterd_fitness)
 
 
     # use the a function to select to indexs to pick
 
     stawb_parent_1_index = re_selection(strawb_normalised)
     stawb_parent_2_index = re_selection(strawb_normalised)
-    print("value one : " + str(strawb_fitness[stawb_parent_1_index]["value"]))
 
     # re-pick index 2 until they are different
     while stawb_parent_1_index != stawb_parent_2_index:
@@ -230,9 +227,9 @@ def newGeneration(old_population):
         new_population.append(new_creature)
 
         # At the end you neet to compute average fitness and return it along with your new population
-
+    new_population[0].chromosome = old_population[strawb_sorterd_fitness[-1]['index']].chromosome
+    print(strawb_sorterd_fitness[-1]['value'])
     avg_fitness = np.mean(strawb_fitness['value']+eats_fitness['value']+wall_fitness['value'])
-    print(avg_fitness)
     f = open("f1.txt", "a")
     f.write(str(avg_fitness)+"\n")
     f.close()
