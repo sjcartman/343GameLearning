@@ -19,6 +19,7 @@ class MyCreature:
         # perform random actions - the actions should be deterministic from
         # computation based on self.chromosome and percepts
         actions = np.random.rand((nActions))
+
         return actions
 
     def trainingSchedule(self):
