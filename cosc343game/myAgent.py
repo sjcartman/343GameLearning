@@ -7,7 +7,7 @@ nPercepts = 75  #This is the number of percepts
 nActions = 5    #This is the number of actionss
 
 # Train against random for 5 generations, then against self for 1 generations
-trainingSchedule = [('random', 30)]
+trainingSchedule = [('random', 100)]
 
 # This is the class for your creature/agent
 
@@ -74,25 +74,36 @@ class MyCreature:
 
 
         return actions
+#expects a sorted array, returns the largest index
+def tourment(fitness, cutOff):
+    np.random.shuffle(fitness)
+    print("shuffled fitness: ")
+    print(fitness)
+    print("\n\n")
+    fitness = fitness[cutOff:]
+    print("cut fitness: ")
+    print(fitness)
+    print("\n\n")
+    fitness = np.sort(fitness, order='value')
+    print("sorted fitness: ")
+    print(fitness)
+    print("\n\n")
+    fitness[-1]['value'] = -100
+    return fitness[-1]['index']
 
-# function to select the index corrosponding to which chromozone to pick
-def selection(fitness):
 
-    # quoted from wikipedia,  this is step 1 of 4 to select the pairs to breed
-    # The fitness function is evaluated for each individual, providing fitness values, which are then normalized.
-    # Normalization means dividing the fitness value of each individual by the sum of all fitness values,
-    # so that the sum of all resulting fitness values equals 1.
+
+
+# function pre-pare an array for the roulte wheel by normalising and then acculmating the values.
+def accumulate(fitness):
+
+
     fitness_sum = sum(fitness['value'])
-    print(fitness['value'])
     if(fitness_sum == 0):
         return  fitness
     normalized_fitness = fitness['value'] / fitness_sum
 
-    # quoted from wikipedia,  this is step 2 of 4 to select the pairs to breed
-    # Accumulated normalized fitness values are computed: the accumulated fitness value of an individual
-    # is the sum of its own fitness value plus the fitness values of all the previous individuals;
-    # the accumulated fitness of the last individual should be 1,
-    # otherwise something went wrong in the normalization step.
+
 
     accumulated_fitness = fitness
     accumulated_fitness[0]['value'] = normalized_fitness[0]
@@ -101,14 +112,12 @@ def selection(fitness):
     return accumulated_fitness
 
 
+#spin the roulte wheel.
+def roultewheel(accumulated_fitness):
 
-def re_selection(accumulated_fitness):
-    # quoted from wikipedia,  this is step 3 of 4 to select the pairs to breed
-    # A random number R between 0 and 1 is chosen.
     R = random.random()
 
-    # quoted from wikipedia,  this is step 4 of 4 to select the pairs to breed
-    # The selected individual is the first one whose accumulated normalized value is greater than or equal to R.
+
     for i in accumulated_fitness:
         if i['value'] >= R:
             return i['index']
@@ -126,14 +135,14 @@ def newGeneration(old_population):
     N = len(old_population)
     # Fitness for all agents
 
+    #create a numpy array that keeps track of our index so we can sort
     dtype = [('index', int), ('value', float)]
     values = []
     for i in range(0, N):
         values.append((i, 0.0))
 
-    strawb_fitness = np.array(values, dtype=dtype)
-    eats_fitness = np.array(values, dtype=dtype)
-    wall_fitness = np.array(values, dtype=dtype)
+    fitness = np.array(values, dtype=dtype)
+    fitnessOrignal = np.array(values, dtype=dtype)
 
     # This loop iterates over your agents in the old population - the purpose of this boiler plate
     # code is to demonstrate how to fetch information from the old_population in order
@@ -161,34 +170,47 @@ def newGeneration(old_population):
         # function - you might want to use information from other stats as well
         #fitness[n][1] = 0.0
         #print(creature.strawb_eats)
-        strawb_fitness[n]['value'] = 0.0
+        fitness[n]['value'] = 0.0
 
-        strawb_fitness[n]['value'] += creature.strawb_eats*20 + creature.enemy_eats*5 +creature.size
+        fitness[n]['value'] += creature.strawb_eats*200 + creature.enemy_eats*100 +creature.turn
+
+        fitnessOrignal[n]['value'] = 0.0
+        fitnessOrignal[n]['value'] += creature.strawb_eats*100 + creature.enemy_eats*50 +creature.turn
+    #sort our fitness by there value.
+    print("our fitness  :")
+    print(fitness)
+    print("\n\n")
+    fitness = np.sort(fitness, order='value')
+
+    #print("sorted fitness  :")
+    #print(fitness)
+    #print("\n\n")
+
+    #fitness = accumulate(fitness)
+
+    #print("accumulated fitness  :")
+    #print(fitness)
+    #print("\n\n")
 
 
-    # At this point you should sort the agent according to fitness and create new population
-    strawb_sorterd_fitness = np.sort(strawb_fitness, order='value')
+    parent_1_index = tourment(fitness,20)
+    parent_2_index = tourment(fitness,20)
 
-
-    new_population = list()
-
-    strawb_normalised = selection(strawb_sorterd_fitness)
-
-
-    # use the a function to select to indexs to pick
-
-    stawb_parent_1_index = re_selection(strawb_normalised)
-    stawb_parent_2_index = re_selection(strawb_normalised)
 
     # re-pick index 2 until they are different
-    while stawb_parent_1_index != stawb_parent_2_index:
-        stawb_parent_2_index = re_selection(strawb_normalised)
+    while parent_1_index == parent_2_index:
+        parent_2_index = tourment(fitness,15)
 
-
+    print("parent 1 index : " + str(parent_1_index) + "value:" + str(fitnessOrignal[parent_1_index]["value"]))
+    print("parent 2 index : " + str(parent_2_index) + "value:" + str(fitnessOrignal[parent_2_index]["value"]))
+    print("\n\n")
     # now we have 2 parents time to preform crossover
-    strab_chrome_1 = old_population[stawb_parent_1_index].chromosome
-    strab_chrome_2 = old_population[stawb_parent_2_index].chromosome
 
+    chrome_1 = old_population[parent_1_index].chromosome
+    chrome_2 = old_population[parent_2_index].chromosome
+
+
+    new_population = []
     for n in range(N):
 
     # Create new creature
@@ -206,17 +228,20 @@ def newGeneration(old_population):
                 for k in range(0,3):
                     r = random.random()
                     if r < 0.5:
-                        child_chromosome[i, j, k] = strab_chrome_1[i, j, k]
+                        child_chromosome[i, j, k] = chrome_1[i, j, k]
 
                     else:
-                        child_chromosome[i, j, k] = strab_chrome_2[i, j, k]
+                        child_chromosome[i, j, k] = chrome_2[i, j, k]
 
 
 
         # Consider implementing elitism, mutation and various other
         # strategies for producing new creature.
+
         r = random.random()
         if r > 0.98:
+            print("mutation")
+            print("\n\n")
             a = random.randrange(0, 5)
             b = random.randrange(0, 5)
             c = random.randrange(0, 3)
@@ -227,9 +252,9 @@ def newGeneration(old_population):
         new_population.append(new_creature)
 
         # At the end you neet to compute average fitness and return it along with your new population
-    new_population[0].chromosome = old_population[strawb_sorterd_fitness[-1]['index']].chromosome
-    print(strawb_sorterd_fitness[-1]['value'])
-    avg_fitness = np.mean(strawb_fitness['value']+eats_fitness['value']+wall_fitness['value'])
+    new_population[0].chromosome = old_population[fitness[-1]['index']].chromosome
+
+    avg_fitness = np.mean((fitnessOrignal['value']+fitnessOrignal['value']+fitnessOrignal['value']))
     f = open("f1.txt", "a")
     f.write(str(avg_fitness)+"\n")
     f.close()
