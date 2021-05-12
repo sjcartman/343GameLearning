@@ -7,7 +7,7 @@ nPercepts = 75  #This is the number of percepts
 nActions = 5    #This is the number of actionss
 
 # Train against random for 5 generations, then against self for 1 generations
-trainingSchedule = [('random', 100)]
+trainingSchedule = [('random', 100),('hunter', 100)]
 
 # This is the class for your creature/agent
 
@@ -77,17 +77,17 @@ class MyCreature:
 #expects a sorted array, returns the largest index
 def tourment(fitness, cutOff):
     np.random.shuffle(fitness)
-    print("shuffled fitness: ")
-    print(fitness)
-    print("\n\n")
+    #print("shuffled fitness: ")
+    #print(fitness)
+    #print("\n\n")
     fitness = fitness[cutOff:]
-    print("cut fitness: ")
-    print(fitness)
-    print("\n\n")
+    #print("cut fitness: ")
+    #print(fitness)
+    #print("\n\n")
     fitness = np.sort(fitness, order='value')
-    print("sorted fitness: ")
-    print(fitness)
-    print("\n\n")
+    #print("sorted fitness: ")
+    #print(fitness)
+    #print("\n\n")
     fitness[-1]['value'] = -100
     return fitness[-1]['index']
 
@@ -172,14 +172,14 @@ def newGeneration(old_population):
         #print(creature.strawb_eats)
         fitness[n]['value'] = 0.0
 
-        fitness[n]['value'] += creature.strawb_eats*200 + creature.enemy_eats*100 +creature.turn
+        fitness[n]['value'] += creature.strawb_eats*400 + creature.enemy_eats*200 + creature.squares_visited
 
         fitnessOrignal[n]['value'] = 0.0
-        fitnessOrignal[n]['value'] += creature.strawb_eats*100 + creature.enemy_eats*50 +creature.turn
+        fitnessOrignal[n]['value'] += creature.strawb_eats*400 + creature.enemy_eats*200 + creature.squares_visited
     #sort our fitness by there value.
-    print("our fitness  :")
-    print(fitness)
-    print("\n\n")
+    #print("our fitness  :")
+    #print(fitness)
+    #print("\n\n")
     fitness = np.sort(fitness, order='value')
 
     #print("sorted fitness  :")
@@ -199,11 +199,11 @@ def newGeneration(old_population):
 
     # re-pick index 2 until they are different
     while parent_1_index == parent_2_index:
-        parent_2_index = tourment(fitness,15)
+        parent_2_index = tourment(fitness, 15)
 
-    print("parent 1 index : " + str(parent_1_index) + "value:" + str(fitnessOrignal[parent_1_index]["value"]))
-    print("parent 2 index : " + str(parent_2_index) + "value:" + str(fitnessOrignal[parent_2_index]["value"]))
-    print("\n\n")
+    #print("parent 1 index : " + str(parent_1_index) + "value:" + str(fitnessOrignal[parent_1_index]["value"]))
+    #print("parent 2 index : " + str(parent_2_index) + "value:" + str(fitnessOrignal[parent_2_index]["value"]))
+    #print("\n\n")
     # now we have 2 parents time to preform crossover
 
     chrome_1 = old_population[parent_1_index].chromosome
@@ -239,9 +239,9 @@ def newGeneration(old_population):
         # strategies for producing new creature.
 
         r = random.random()
-        if r > 0.98:
-            print("mutation")
-            print("\n\n")
+        if r > 0.99:
+            ##print("mutation")
+            ##print("\n\n")
             a = random.randrange(0, 5)
             b = random.randrange(0, 5)
             c = random.randrange(0, 3)
@@ -252,7 +252,7 @@ def newGeneration(old_population):
         new_population.append(new_creature)
 
         # At the end you neet to compute average fitness and return it along with your new population
-    new_population[0].chromosome = old_population[fitness[-1]['index']].chromosome
+    new_population[0].chromosome = old_population[tourment(fitness, 32)].chromosome
 
     avg_fitness = np.mean((fitnessOrignal['value']+fitnessOrignal['value']+fitnessOrignal['value']))
     f = open("f1.txt", "a")
